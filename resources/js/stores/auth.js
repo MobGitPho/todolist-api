@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
+import axios from '@/composable/axios.js'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -12,6 +12,7 @@ export const useAuthStore = defineStore('auth', {
       localStorage.setItem('token', response.data.token)
       this.token = response.data.token
       await this.fetchUser()
+
     },
     async login(credentials) {
       const response = await axios.post('/api/auth/login', credentials)

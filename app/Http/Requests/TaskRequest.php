@@ -7,24 +7,28 @@ use Illuminate\Foundation\Http\FormRequest;
 class TaskRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
+     *
+     * @return bool
      */
-    public function authorize(): bool
+    public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Obtient les règles de validation pour la requête.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array
      */
-    public function rules(): array
+    public function rules()
     {
         return [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'duration' => 'nullable|integer|min:1'
+            'duration' => 'nullable|integer|min:1',
+            'completed' => 'boolean',
+            'archived' => 'boolean',
         ];
     }
 }

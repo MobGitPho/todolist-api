@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use Closure;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
 
@@ -13,5 +15,17 @@ class Authenticate extends Middleware
     protected function redirectTo(Request $request): ?string
     {
         return $request->expectsJson() ? null : route('login');
+    }
+
+    public function handle($request, Closure $next, ...$guards)
+    {
+        if (!Auth::guard('sanctum')->check()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated'], 401);
+            }
+            return redirect()->guest(route('login'));
+        }
+
+        return $next($request);
     }
 }

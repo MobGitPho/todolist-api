@@ -2,78 +2,96 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Http\Requests\TaskRequest;
-use App\Http\Resources\TaskCollection;
-use App\Http\Resources\TasKResource;
-use App\Model\Task;
+use App\Models\Task;
+use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Affiche la liste des tâches.
+     *
+     * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        return new TaskCollection(
-            auth()->user()->tasks()
-                ->where('archived', false)
-                ->latest()
-                ->get()
-        );
+        $tasks = Task::with('user')->get();
+        return response()->json($tasks);
     }
 
     /**
-     * Store a newly created resource in storage.
-     */ public function store(TaskRequest $request)
+     * Crée une nouvelle tâche.
+     *
+     * @param \App\Http\Requests\TaskRequest $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(TaskRequest $request)
     {
-        $task = auth()->user()->tasks()->create($request->validated());
-        return new TaskResource($task);
+
+        $task = Task::create($request->validated() + ['user_id' => $request->input('user_id')]);
+        return response()->json($task, 201);
     }
 
     /**
-     * Display the specified resource.
+     * Affiche les détails d'une tâche.
+     *
+     * @param \App\Models\Task $task
+     * @return \Illuminate\Http\Response
      */
     public function show(Task $task)
     {
-        $this->authorize('view', $task);
-        return new TaskResource($task);
+        return response()->json($task);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Met à jour une tâche existante.
+     *
+     * @param \App\Http\Requests\TaskRequest $request
+     * @param \App\Models\Task $task
+     * @return \Illuminate\Http\Response
      */
     public function update(TaskRequest $request, Task $task)
     {
-        $this->authorize('update', $task);
         $task->update($request->validated());
-        return new TaskResource($task);
+        return response()->json($task);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Marque une tâche comme complétée.
+     *
+     * @param \App\Models\Task $task
+     * @return \Illuminate\Http\Response
+     */
+    public function complete(Task $task)
+    {
+        $task->update([
+            'completed' => true,
+            'completed_at' => now(),
+        ]);
+        return response()->json($task);
+    }
+
+    /**
+     * Archive une tâche.
+     *
+     * @param \App\Models\Task $task
+     * @return \Illuminate\Http\Response
+     */
+    public function archive(Task $task)
+    {
+        $task->update(['archived' => true]);
+        return response()->json($task);
+    }
+
+    /**
+     * Supprime une tâche.
+     *
+     * @param \App\Models\Task $task
+     * @return \Illuminate\Http\Response
      */
     public function destroy(Task $task)
     {
-        $this->authorize('delete', $task);
         $task->delete();
-        return response()->noContent();
-    }
-
-    public function complete(Task $task)
-    {
-        $this->authorize('update', $task);
-        $task->update([
-            'completed' => true,
-            'completed_at' => now()
-        ]);
-        return new TaskResource($task);
-    }
-
-    public function archive(Task $task)
-    {
-        $this->authorize('update', $task);
-        $task->update(['archived' => true]);
-        return new TaskResource($task);
+        return response()->json(null, 204);
     }
 }
