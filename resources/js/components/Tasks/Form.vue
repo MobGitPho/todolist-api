@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useTaskStore } from '@/stores/task'
 import { useUserStore } from '@/stores/user'
+import { useNotificationStore } from '@/stores/notification'
 
 const props = defineProps({
   task: {
@@ -12,6 +13,7 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
+const notification = useNotificationStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
 
@@ -35,12 +37,16 @@ const handleSubmit = async () => {
         id: props.task.id,
         data: taskData
       })
+      notification.show('Tâche mise à jour.', 'info')
     } else {
       await taskStore.createTask(taskData)
+      notification.show('Tâche créée avec succès !', 'success')
     }
 
     emit('submit')
     resetForm()
+    init()
+
   } catch (error) {
     console.error("Erreur lors de l'enregistrement", error)
   }
@@ -57,6 +63,10 @@ const resetForm = () => {
 const cancel = () => {
   resetForm()
   emit('cancel')
+}
+
+const init = async()=> {
+     await taskStore.fetchTasks()
 }
 </script>
 

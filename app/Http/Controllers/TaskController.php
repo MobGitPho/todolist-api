@@ -15,7 +15,7 @@ class TaskController extends Controller
      */
     public function index()
     {
-        $tasks = Task::with('user')->get();
+        $tasks = Task::where('user_id', auth()->id())->get();
         return response()->json($tasks);
     }
 
@@ -27,8 +27,9 @@ class TaskController extends Controller
      */
     public function store(TaskRequest $request)
     {
+        auth()->user();
 
-        $task = Task::create($request->validated() + ['user_id' => $request->input('user_id')]);
+        $task = Task::create($request->validated() + ['user_id' => auth()->id()]);
         return response()->json($task, 201);
     }
 
@@ -52,7 +53,20 @@ class TaskController extends Controller
      */
     public function update(TaskRequest $request, Task $task)
     {
+
         $task->update($request->validated());
+        return response()->json($task);
+    }
+
+    public function updateArchive(Task $task, Request $request)
+    {
+        // Valide uniquement ce dont tu as besoin
+        $request->validate([
+            'archived' => 'boolean',
+        ]);
+
+        $task->update(['archived' => $request->archived]);
+
         return response()->json($task);
     }
 
@@ -62,26 +76,19 @@ class TaskController extends Controller
      * @param \App\Models\Task $task
      * @return \Illuminate\Http\Response
      */
-    public function complete(Task $task)
+    public function complete(Task $task, Request $request)
     {
-        $task->update([
-            'completed' => true,
-            'completed_at' => now(),
+
+        $request->validate([
+            'completed' => 'required|boolean',
         ]);
+
+        $task->update(['completed' => $request->completed, 'completed_at' =>  $request->completed ? now() : null]);
+
+
         return response()->json($task);
     }
 
-    /**
-     * Archive une tâche.
-     *
-     * @param \App\Models\Task $task
-     * @return \Illuminate\Http\Response
-     */
-    public function archive(Task $task)
-    {
-        $task->update(['archived' => true]);
-        return response()->json($task);
-    }
 
     /**
      * Supprime une tâche.

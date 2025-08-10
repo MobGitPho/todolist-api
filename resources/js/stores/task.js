@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import axios from '@/composable/axios.js'
 
 export const useTaskStore = defineStore('task', {
+
   state: () => ({
     tasks: [],
     loading: false,
@@ -19,7 +20,8 @@ export const useTaskStore = defineStore('task', {
       this.loading = true
       try {
         const response = await axios.get('/api/tasks')
-        this.tasks = response.data.data || []
+        console.log('TT', response)
+        this.tasks = response.data.reverse() || []
       } catch (error) {
         this.error = error.response?.data?.message || 'Failed to fetch tasks'
         throw error
@@ -32,8 +34,9 @@ export const useTaskStore = defineStore('task', {
       this.loading = true
       try {
         const response = await axios.post('/api/tasks', taskData)
-        this.tasks.push(response.data.data)
+        this.tasks.push(response.data)
         return response.data
+         notification.show(' la tâche est créée avec succes', 'succes');
       } catch (error) {
         this.error = error.response?.data?.message || 'Failed to create task'
         throw error
@@ -59,25 +62,57 @@ export const useTaskStore = defineStore('task', {
       }
     },
 
-    async toggleTaskCompletion(taskId) {
-      const task = this.tasks.find(t => t.id === taskId)
-      if (!task) return
+     async showTask(task) {
+        console.log('SST', task)
+      this.loading = true
+      try {
+        const response = await axios.get(`/api/tasks/${task}`)
 
-      const newStatus = !task.completed
-      return this.updateTask({
-        id: taskId,
-        data: {
-          completed: newStatus,
-          completed_at: newStatus ? new Date().toISOString() : null
+        const index = this.tasks.findIndex(t => t.id === id)
+        if (index !== -1) {
+          this.tasks[index] = response.data.data
         }
-      })
+        return response.data
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Failed to update task'
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
 
-    async archiveTask(taskId) {
-      return this.updateTask({
-        id: taskId,
-        data: { archived: true }
-      })
+    async completeTask(task, completed = true) {
+        this.loading = true;
+        try {
+            const response = await axios.put(`/api/tasks/${task.id}/complete`, { completed });
+            const index = this.tasks.findIndex(t => t.id === task.id);
+            if (index !== -1) {
+                this.tasks[index] = response.data;
+            }
+            return response.data;
+        } catch (error) {
+            this.error = error.response?.data?.message || 'Failed to complete task';
+            throw error;
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    async archiveTask(task) {
+        this.loading = true
+        try {
+            const response = await axios.put(`/api/tasks/${task?.id}/archive`, { archived: true });
+            const index = this.tasks.findIndex(t => t.id === task.id);
+            if (index !== -1) {
+            this.tasks[index] = response.data; // Mettez à jour la tâche dans le store
+            }
+            return response.data;
+        } catch (error) {
+            this.error = error.response?.data?.message || 'Failed to archive task';
+            throw error;
+        } finally {
+            this.loading = false;
+        }
     },
 
     async deleteTask(taskId) {

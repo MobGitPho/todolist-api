@@ -1,11 +1,14 @@
 <script setup>
+import Notification from '@/components/Notification.vue'
 import Navbar from '@/components/Layouts/Navbar.vue';
+
 </script>
 
 <template>
   <div id="app">
     <Navbar />
     <router-view />
+    <Notification />
   </div>
 </template>
 

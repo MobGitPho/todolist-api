@@ -1,5 +1,7 @@
 <script setup>
-//
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
 
 </script>
 
@@ -8,9 +10,12 @@
     <h1>Todo List</h1>
     <ul >
       <li><router-link to="/">Accueil</router-link></li>
-      <li><router-link to="/login">Connexion</router-link></li>
-      <li><router-link to="/register">Inscription</router-link></li>
-      <li><router-link to="/form">Formulaire</router-link></li>
+      <li><router-link to="/tasks">Mes Tâches</router-link></li>
+      <li v-if="userStore.token == null"><router-link to="/login">Connexion</router-link></li>
+      <li v-if="userStore.token != null " @click.prevent="userStore.logout()"><router-link to="">Deconnexion</router-link></li>
+      <!-- <li><router-link to="/register">Inscription</router-link></li> -->
+
+
     </ul>
   </nav>
 </template>

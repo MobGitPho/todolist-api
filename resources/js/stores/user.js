@@ -62,12 +62,14 @@ export const useUserStore = defineStore('user', {
 
     logout() {
       this.clearAuth()
+      window.location.href = '/login'
     },
 
     clearAuth() {
       this.user = null
       this.token = null
       localStorage.removeItem('token')
+      localStorage.removeItem('userData')
       delete axios.defaults.headers.common['Authorization']
     },
 

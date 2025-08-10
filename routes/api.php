@@ -31,21 +31,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks', [TaskController::class, 'index']);
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
+    Route::put('/tasks/{task}/archive', [TaskController::class, 'updateArchive']);
+    Route::put('/tasks/{task}/complete', [TaskController::class, 'complete']);
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
-    Route::patch('/tasks/{task}/complete', [TaskController::class, 'complete']);
-    Route::patch('/tasks/{task}/archive', [TaskController::class, 'archive']);
+
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 });
-// Route::middleware('auth:sanctum')->group(function () {
-//     Route::apiResource('tasks', TaskController::class);
-
-//     Route::post('tasks/{task}/complete', [
-//         TaskController::class,
-//         'complete'
-//     ]);
-//     Route::post('tasks/{task}/archive', [
-//         TaskController::class,
-//         'archive'
-//     ]);
-//     Route::get('/users/{userId}/tasks', [TaskController::class, 'userTasks']);
-// });

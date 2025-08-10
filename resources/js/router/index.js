@@ -41,15 +41,6 @@ const router = createRouter({
       }
     },
     {
-      path: '/form',
-      name: 'formulaire',
-      component: TaskFormView,
-      meta: {
-        title: 'Formulaire TasK',
-        requiresAuth: true
-      }
-    },
-    {
       path: '/tasks',
       name: 'tasks',
       component: TaskListView,
@@ -70,34 +61,32 @@ const router = createRouter({
   ]
 })
 
-/**
- * Gestion des guards de navigation
- */
+
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
-  // Si la route nécessite une authentification
+
   if (to.meta.requiresAuth) {
-    // Si l'utilisateur n'est pas connecté
+
     if (!userStore.isAuthenticated) {
       try {
-        // Tentative de récupération de l'utilisateur
+
         await userStore.fetchUser()
       } catch (error) {
         // Redirection vers la page de connexion si échec
-        return next({ name: 'login', query: { redirect: to.fullPath } })
+        return next({ name: 'login', path:'/login'  })
       }
     }
 
     // Si l'utilisateur est toujours non connecté après le fetch
     if (!userStore.isAuthenticated) {
-      return next({ name: 'login', query: { redirect: to.fullPath } })
+      return next({ name: 'login', path:'/login' })
     }
   }
 
   // Si la route est réservée aux invités (login/register)
   if (to.meta.guestOnly && userStore.isAuthenticated) {
-    return next({ name: 'dashboard' }) // Redirige vers le dashboard si déjà connecté
+    return next({ name: 'home', path:'/login'  }) // Redirige vers le dashboard si déjà connecté
   }
 
   // Met à jour le titre de la page
