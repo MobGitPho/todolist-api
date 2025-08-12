@@ -20,7 +20,7 @@ export const useTaskStore = defineStore('task', {
       this.loading = true
       try {
         const response = await axios.get('/api/tasks')
-        console.log('TT', response)
+
         this.tasks = response.data.reverse() || []
       } catch (error) {
         this.error = error.response?.data?.message || 'Failed to fetch tasks'
@@ -31,54 +31,52 @@ export const useTaskStore = defineStore('task', {
     },
 
     async createTask(taskData) {
-      this.loading = true
-      try {
-        const response = await axios.post('/api/tasks', taskData)
-        this.tasks.push(response.data)
-        return response.data
-         notification.show(' la tâche est créée avec succes', 'succes');
-      } catch (error) {
-        this.error = error.response?.data?.message || 'Failed to create task'
-        throw error
-      } finally {
-        this.loading = false
-      }
+        this.loading = true
+        try {
+            const response = await axios.post('/api/tasks', taskData)
+            this.tasks.push(response.data)
+            return response.data
+        } catch (error) {
+            this.error = error.response?.data?.message || 'Failed to create task'
+            throw error
+        } finally {
+            this.loading = false
+        }
     },
 
     async updateTask({ id, data }) {
-      this.loading = true
-      try {
-        const response = await axios.put(`/api/tasks/${id}`, data)
-        const index = this.tasks.findIndex(t => t.id === id)
-        if (index !== -1) {
-          this.tasks[index] = response.data.data
+        this.loading = true
+        try {
+            const response = await axios.put(`/api/tasks/${id}`, data)
+            const index = this.tasks.findIndex(t => t.id === id)
+            if (index !== -1) {
+            this.tasks[index] = response.data.data
+            }
+            return response.data
+        } catch (error) {
+            this.error = error.response?.data?.message || 'Failed to update task'
+            throw error
+        } finally {
+            this.loading = false
         }
-        return response.data
-      } catch (error) {
-        this.error = error.response?.data?.message || 'Failed to update task'
-        throw error
-      } finally {
-        this.loading = false
-      }
     },
 
-     async showTask(task) {
-        console.log('SST', task)
-      this.loading = true
-      try {
-        const response = await axios.get(`/api/tasks/${task}`)
+    async showTask(task) {
+        this.loading = true
+        try {
+            const response = await axios.get(`/api/tasks/${task}`)
 
-        const index = this.tasks.findIndex(t => t.id === id)
-        if (index !== -1) {
-          this.tasks[index] = response.data.data
+            const index = this.tasks.findIndex(t => t.id === id)
+            if (index !== -1) {
+            this.tasks[index] = response.data.data
+            }
+            return response.data
+        } catch (error) {
+            this.error = error.response?.data?.message || 'Failed to update task'
+            throw error
+        } finally {
+            this.loading = false
         }
-        return response.data
-      } catch (error) {
-        this.error = error.response?.data?.message || 'Failed to update task'
-        throw error
-      } finally {
-        this.loading = false
-      }
     },
 
     async completeTask(task, completed = true) {
@@ -104,7 +102,7 @@ export const useTaskStore = defineStore('task', {
             const response = await axios.put(`/api/tasks/${task?.id}/archive`, { archived: true });
             const index = this.tasks.findIndex(t => t.id === task.id);
             if (index !== -1) {
-            this.tasks[index] = response.data; // Mettez à jour la tâche dans le store
+            this.tasks[index] = response.data;
             }
             return response.data;
         } catch (error) {
@@ -126,6 +124,24 @@ export const useTaskStore = defineStore('task', {
       } finally {
         this.loading = false
       }
+    },
+
+    async restoreTask(task) {
+        try {
+            await axios.put(`/api/tasks/${task.id}/restore`);
+        } catch (error) {
+            console.error('Erreur restauration:', error);
+        }
+    },
+
+    async forceDeleteTask(task) {
+        try {
+            await axios.delete(`/api/tasks/${task.id}/force-delete`);
+
+        } catch (error) {
+            console.error('Erreur suppression:', error);
+        }
+
     }
   }
 })

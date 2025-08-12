@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    protected $fillable = ['user_id', 'title', 'description', 'completed', 'archived', 'duration', 'completed_at'];
+    protected $fillable = ['user_id', 'title', 'description', 'completed', 'archived', 'duration', 'completed_at', 'deleted_at'];
     protected $casts = [
         'completed_at' => 'datetime',
     ];

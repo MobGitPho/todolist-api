@@ -1,13 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
 
 // Importez vos composants de vue
 import HomeView from '@/components/Home.vue'
 import LoginView from '@/components/auth/Login.vue'
 import RegisterView from '@/components/auth/Register.vue'
 import TaskListView from '@/components/tasks/List.vue'
-import TaskItemView from '@/components/tasks/Item.vue'
-import TaskFormView from '@/components/tasks/Form.vue'
 import NotFoundView from '@/components/NotFound.vue'
 
 const router = createRouter({
@@ -49,7 +47,7 @@ const router = createRouter({
         requiresAuth: true
       }
     },
-    // Gestion des erreurs 404
+
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -63,33 +61,29 @@ const router = createRouter({
 
 
 router.beforeEach(async (to, from, next) => {
-  const userStore = useUserStore()
+ const authStore = useAuthStore()
 
 
   if (to.meta.requiresAuth) {
 
-    if (!userStore.isAuthenticated) {
+    if (!authStore.isAuthenticated) {
       try {
 
-        await userStore.fetchUser()
+        await authStore.fetchUser()
       } catch (error) {
-        // Redirection vers la page de connexion si échec
-        return next({ name: 'login', path:'/login'  })
+        return next({ name: 'login'})
       }
     }
 
-    // Si l'utilisateur est toujours non connecté après le fetch
-    if (!userStore.isAuthenticated) {
-      return next({ name: 'login', path:'/login' })
+    if (!authStore.isAuthenticated) {
+      return next({ name: 'login'})
     }
   }
 
-  // Si la route est réservée aux invités (login/register)
-  if (to.meta.guestOnly && userStore.isAuthenticated) {
-    return next({ name: 'home', path:'/login'  }) // Redirige vers le dashboard si déjà connecté
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
+    return next({ name: 'home' })
   }
 
-  // Met à jour le titre de la page
   document.title = to.meta.title ? `${to.meta.title} | TodoApp` : 'TodoApp'
 
   next()

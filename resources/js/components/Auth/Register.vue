@@ -13,104 +13,122 @@ const form = ref({
 })
 
 const errorMsg = ref('')
+const succesMsg = ref('')
 const errors = ref({})
 const loading = ref(false)
+const emailInput = ref(null)
 
-const handleLogin = async () => {
-  errorMsg.value = ''
-  errors.value = {}
-  loading.value = true
+const handleRegister = async () => {
+    errorMsg.value = ''
+    succesMsg.value = ''
+    errors.value = {}
+    loading.value = true
 
-  try {
-    await authStore.register(form.value)
-    window.location.href = '/tasks'//
-  } catch (error) {
-    const res = error.response?.data
-    errorMsg.value = res?.message || 'Veuillew remplir tous les champs; mot de passe superieur à 8 caratères!'
-    errors.value = res?.errors || {}
-  } finally {
-    loading.value = false
-  }
+    try {
+        const res = await authStore.register(form.value)
+
+        if (!res.success) {
+            errorMsg.value = res.message
+            errors.value = res.errors
+            return
+        }
+
+        succesMsg.value = 'Inscription réussie ! Veuillez vous reconnecter.'
+
+        form.value = {
+            name: '',
+            email: '',
+            password: ''
+        }
+
+        setTimeout(() => {
+            router.push('/login')
+        }, 3000)
+
+    } catch (error) {
+        errorMsg.value = 'Une erreur inattendue est survenue.'
+        console.error('Register error:', error)
+    } finally {
+        loading.value = false
+    }
 }
 
-// Focus automatique sur le champ email au chargement
-const emailInput = ref(null)
 onMounted(() => {
   emailInput.value?.focus()
 })
 </script>
 
 <template>
-  <div class="auth-container">
-    <div class="auth-card">
-      <!-- Header -->
-      <div class="auth-header">
-        <h1 class="auth-title">Bienvenue</h1>
-        <p class="auth-subtitle">S'inscire sur TodoApp</p>
-      </div>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1 class="auth-title">Bienvenue</h1>
+                <p class="auth-subtitle">S'inscire sur TodoApp</p>
+            </div>
 
-      <!-- Error Global -->
-      <div v-if="errorMsg" class="alert alert-error">
-        {{ errorMsg }}
-      </div>
+            <div v-if="errorMsg " class="alert alert-error">
+                {{ errorMsg }}
+            </div>
+            <div v-if="succesMsg " class="alert alert-succes">
+                {{ succesMsg }}
+            </div>
 
-      <!-- Form -->
-      <form @submit.prevent="handleLogin" class="auth-form">
+            <form @submit.prevent="handleRegister" class="auth-form">
 
-        <div class="form-group">
-          <!-- <label for="name" class="form-label">Nom</label> -->
-          <input
-            id="name"
-            ref="nameInput"
-            v-model="form.name"
-            type="text"
-            class="form-input"
-            :class="{ 'form-input-error': errors.name }"
-            placeholder="John Doe"
-            required
-          />
-          <span v-if="errors.name" class="form-error">{{ errors.name[0] }}</span>
+                <div class="form-group">
+
+                    <input
+                        id="name"
+                        ref="nameInput"
+                        v-model="form.name"
+                        type="text"
+                        class="form-input"
+                        :class="{ 'form-input-error': errors.name }"
+                        placeholder="John Doe"
+                        required
+                    />
+                    <span v-if="errors.name" class="form-error">{{ errors.name[0] }}</span>
+                </div>
+                <div class="form-group">
+                    <input
+                        id="email"
+                        ref="emailInput"
+                        v-model="form.email"
+                        type="email"
+                        class="form-input"
+                        :class="{ 'form-input-error': errors.email }"
+                        placeholder="vous@exemple.com"
+                        required
+                    />
+                    <span v-if="errors.email" class="form-error">{{ errors.email[0] }}</span>
+                </div>
+                <div class="form-group">
+                    <input
+                        id="password"
+                        v-model="form.password"
+                        type="password"
+                        class="form-input"
+                        :class="{ 'form-input-error': errors.password }"
+                        placeholder="••••••••"
+                        required
+                    />
+                    <span v-if="errors.password" class="form-error">{{ errors.password[0] }}</span>
+                </div>
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                    :disabled="loading"
+                >
+                    <span v-if="loading" class="loader"></span>
+                    <span v-else>{{ form.password ? 'S\'inscrire' : 'Inscription' }}</span>
+                </button>
+                <p class="auth-footer">
+                    Vous avez déjà un compte ?
+                    <router-link to="/login" class="link">Se connecter</router-link>
+                </p>
+            </form>
         </div>
-        <div class="form-group">
-          <input
-            id="email"
-            ref="emailInput"
-            v-model="form.email"
-            type="email"
-            class="form-input"
-            :class="{ 'form-input-error': errors.email }"
-            placeholder="vous@exemple.com"
-            required
-          />
-          <span v-if="errors.email" class="form-error">{{ errors.email[0] }}</span>
-        </div>
-        <div class="form-group">
-          <input
-            id="password"
-            v-model="form.password"
-            type="password"
-            class="form-input"
-            :class="{ 'form-input-error': errors.password }"
-            placeholder="••••••••"
-            required
-          />
-          <span v-if="errors.password" class="form-error">{{ errors.password[0] }}</span>
-        </div>
-        <button
-          type="submit"
-          class="btn btn-primary"
-          :disabled="loading"
-        >
-          <span v-if="loading" class="loader"></span>
-          <span v-else>{{ form.password ? 'Se connecter' : 'Continuer' }}</span>
-        </button>
-        <p class="auth-footer">
-          Vous avez déjà un compte ?
-          <router-link to="/login" class="link">Se connecter</router-link>
-        </p>
-      </form>
     </div>
-  </div>
 </template>
 
 <style scoped>
@@ -161,6 +179,17 @@ onMounted(() => {
   margin-bottom: 1.25rem;
   text-align: center;
   border: 1px solid #fecaca;
+}
+
+.alert-succes {
+  background: #114603;
+  color: #fff;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  border: 1px solid #082201;
 }
 
 .form-group {
@@ -270,163 +299,3 @@ onMounted(() => {
   }
 }
 </style>
-
-<!-- <script setup>
-import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-
-const authStore = useAuthStore()
-const router = useRouter()
-
-const form = ref({
-  email: '',
-  password: ''
-})
-
-const errorMsg = ref()
-
-const errors = ref({})
-
-const handleLogin = async () => {
-  try {
-    await authStore.login(form.value)
-    window.location.href = '/tasks'
-  } catch (error) {
-    errorMsg.value = 'Email ou mot de passe incorrect'
-    errors.value = error.response?.data?.errors || {}
-  }
-}
-</script>
-
-<template>
-  <div class="auth-form">
-    <h2>Connexion</h2>
-    <span v-if="errors" class="error">{{ errorMsg }}</span>
-    <form @submit.prevent="handleLogin">
-      <div class="form-group">
-        <input v-model="form.email" type="email" placeholder="email" required>
-
-      </div>
-
-      <div class="form-group">
-
-        <input v-model="form.password" type="password" placeholder="mot de passe" required>
-
-      </div>
-
-
-      <button type="submit">Se connecter</button>
-      <p> Vous n'avez pas de compte? veuillez vous <router-link to="/register"> s'inscrire</router-link></p>
-    </form>
-  </div>
-</template>
-
-<style scoped>
-.auth-form {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.error {
-  color: red;
-  font-size: 0.875rem;
-  text-align: justify;
-
-
-form{
-  padding-top: 20px;
-}
-}
-
-a {
-  color: black;
-  text-decoration: none;
-}
-</style> -->
-
-
-<!-- <script setup>
-import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-
-const authStore = useAuthStore()
-const router = useRouter()
-
-const form = ref({
-  name: '',
-  email: '',
-  password: ''
-})
-
-const errors = ref({})
-const passwordMsg = 'le mot de passe doit contenir au moins 8 caractère'
-const handleLogin = async () => {
-  try {
-    await authStore.register(form.value)
-    router.push('/login')
-  } catch (error) {
-    errors.value = error.response?.data?.errors || {}
-  }
-}
-</script>
-
-<template>
-  <div class="auth-form">
-    <h2>Inscription</h2>
-    <form @submit.prevent="handleLogin">
-        <div class="form-group">
-
-        <input v-model="form.name" type="text" placeholder="Nom" required>
-        <span v-if="errors.name" class="error">{{ errors.name[0] }}</span>
-      </div>
-
-      <div class="form-group">
-
-        <input v-model="form.email" type="email" placeholder="email" required>
-        <span v-if="errors.email" class="error">{{ errors.email[0] }}</span>
-      </div>
-
-      <div class="form-group">
-
-        <input v-model="form.password" type="password" placeholder="mot de passe" required>
-        <span v-if="errors.password" class="error">{{ passwordMsg }}</span>
-      </div>
-
-      <button type="submit">S'inscrire</button>
-       <p> Vous avez déjà un compte? veuillez vous <router-link to="/login"> connecter</router-link></p>
-    </form>
-  </div>
-</template>
-
-<style scoped>
-.auth-form {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.error {
-  color: red;
-  font-size: 0.875rem;
-}
-
-a {
-  color: black;
-  text-decoration: none;
-}
-</style> -->

@@ -33,7 +33,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
     Route::put('/tasks/{task}/archive', [TaskController::class, 'updateArchive']);
     Route::put('/tasks/{task}/complete', [TaskController::class, 'complete']);
+    Route::put('/tasks/{id}/restore', [TaskController::class, 'restore']);
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
 
+    Route::delete('/tasks/{id}/force-delete', [TaskController::class, 'forceDelete']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 });

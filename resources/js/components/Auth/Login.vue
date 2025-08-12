@@ -14,86 +14,88 @@ const form = ref({
 const errorMsg = ref('')
 const errors = ref({})
 const loading = ref(false)
+const emailInput = ref(null)
 
 const handleLogin = async () => {
-  errorMsg.value = ''
-  errors.value = {}
-  loading.value = true
+    errorMsg.value = ''
+    errors.value = {}
+    loading.value = true
 
-  try {
-    await authStore.login(form.value)
-    window.location.href = '/tasks'
-  } catch (error) {
-    const res = error.response?.data
-    errorMsg.value = res?.message || 'Email ou mot de passe incorrect'
-    errors.value = res?.errors || {}
-  } finally {
-    loading.value = false
-  }
+    try {
+        const resp = await authStore.login(form.value)
+        if (!resp.success) {
+            errorMsg.value = resp.message
+            errors.value = resp.errors
+            return
+        }
+        router.push('/tasks')
+    } catch (error) {
+        errorMsg.value = 'Une erreur est survenue'
+        console.error(error)
+    } finally {
+        loading.value = false
+    }
 }
 
-
-const emailInput = ref(null)
 onMounted(() => {
   emailInput.value?.focus()
 })
 </script>
 
 <template>
-  <div class="auth-container">
-    <div class="auth-card">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1 class="auth-title">Bienvenue</h1>
+                <p class="auth-subtitle">Connectez-vous à votre compte</p>
+            </div>
 
-      <div class="auth-header">
-        <h1 class="auth-title">Bienvenue</h1>
-        <p class="auth-subtitle">Connectez-vous à votre compte</p>
-      </div>
+            <div v-if="errorMsg" class="alert alert-error">
+                {{ errorMsg }}
+            </div>
+            <form @submit.prevent="handleLogin" class="auth-form">
 
-      <div v-if="errorMsg" class="alert alert-error">
-        {{ errorMsg }}
-      </div>
-      <form @submit.prevent="handleLogin" class="auth-form">
+                <div class="form-group">
+                    <input
+                        id="email"
+                        ref="emailInput"
+                        v-model="form.email"
+                        type="email"
+                        class="form-input"
+                        :class="{ 'form-input-error': errors.email }"
+                        placeholder="vous@exemple.com"
+                        required
+                    />
+                    <span v-if="errors.email" class="form-error">{{ errors.email[0] }}</span>
+                </div>
 
-        <div class="form-group">
-          <input
-            id="email"
-            ref="emailInput"
-            v-model="form.email"
-            type="email"
-            class="form-input"
-            :class="{ 'form-input-error': errors.email }"
-            placeholder="vous@exemple.com"
-            required
-          />
-          <span v-if="errors.email" class="form-error">{{ errors.email[0] }}</span>
+                <div class="form-group">
+                    <input
+                        id="password"
+                        v-model="form.password"
+                        type="password"
+                        class="form-input"
+                        :class="{ 'form-input-error': errors.password }"
+                        placeholder="••••••••"
+                        required
+                    />
+                    <span v-if="errors.password" class="form-error">{{ errors.password[0] }}</span>
+                </div>
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                    :disabled="loading"
+                >
+                    <span v-if="loading" class="loader"></span>
+                    <span v-else>{{ form.password ? 'Se connecter' : 'Continuer' }}</span>
+                </button>
+                <p class="auth-footer">
+                    Vous n'avez pas de compte ?
+                    <router-link to="/register" class="link">S'inscrire</router-link>
+                </p>
+            </form>
         </div>
-
-        <div class="form-group">
-          <input
-            id="password"
-            v-model="form.password"
-            type="password"
-            class="form-input"
-            :class="{ 'form-input-error': errors.password }"
-            placeholder="••••••••"
-            required
-          />
-          <span v-if="errors.password" class="form-error">{{ errors.password[0] }}</span>
-        </div>
-        <button
-          type="submit"
-          class="btn btn-primary"
-          :disabled="loading"
-        >
-          <span v-if="loading" class="loader"></span>
-          <span v-else>{{ form.password ? 'Se connecter' : 'Continuer' }}</span>
-        </button>
-        <p class="auth-footer">
-          Vous n'avez pas de compte ?
-          <router-link to="/register" class="link">S'inscrire</router-link>
-        </p>
-      </form>
     </div>
-  </div>
 </template>
 
 <style scoped>
@@ -243,7 +245,6 @@ onMounted(() => {
   text-decoration: underline;
 }
 
-/* Responsive */
 @media (max-width: 480px) {
   .auth-card {
     padding: 1.5rem;
@@ -253,84 +254,3 @@ onMounted(() => {
   }
 }
 </style>
-
-<!-- <script setup>
-import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-
-const authStore = useAuthStore()
-const router = useRouter()
-
-const form = ref({
-  email: '',
-  password: ''
-})
-
-const errorMsg = ref()
-
-const errors = ref({})
-
-const handleLogin = async () => {
-  try {
-    await authStore.login(form.value)
-    window.location.href = '/tasks'
-  } catch (error) {
-    errorMsg.value = 'Email ou mot de passe incorrect'
-    errors.value = error.response?.data?.errors || {}
-  }
-}
-</script>
-
-<template>
-  <div class="auth-form">
-    <h2>Connexion</h2>
-    <span v-if="errors" class="error">{{ errorMsg }}</span>
-    <form @submit.prevent="handleLogin">
-      <div class="form-group">
-        <input v-model="form.email" type="email" placeholder="email" required>
-
-      </div>
-
-      <div class="form-group">
-
-        <input v-model="form.password" type="password" placeholder="mot de passe" required>
-
-      </div>
-
-
-      <button type="submit">Se connecter</button>
-      <p> Vous n'avez pas de compte? veuillez vous <router-link to="/register"> s'inscrire</router-link></p>
-    </form>
-  </div>
-</template>
-
-<style scoped>
-.auth-form {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.error {
-  color: red;
-  font-size: 0.875rem;
-  text-align: justify;
-
-
-form{
-  padding-top: 20px;
-}
-}
-
-a {
-  color: black;
-  text-decoration: none;
-}
-</style> -->

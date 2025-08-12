@@ -10,28 +10,55 @@ export const useAuthStore = defineStore('auth', {
   }),
   actions: {
     async register(credentials) {
-      const response = await axios.post('/api/auth/register', credentials)
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('userData',JSON.stringify(response.data.data))
-      this.token = response.data.token
-      await this.fetchUser()
-
+        try {
+            const response = await axios.post('/api/auth/register', credentials)
+            return { success: true, data: response.data }
+        } catch (error) {
+            const message = error.response?.data?.message || 'Échec de l\'inscription'
+            const errors = error.response?.data?.errors || {}
+            return { success: false, message, errors }
+        }
     },
+
     async login(credentials) {
-      const response = await axios.post('/api/auth/login', credentials)
+        try {
+            const response = await axios.post('/api/auth/login', credentials)
 
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('userData', JSON.stringify(response.data.data))
-      this.token = response.data.token
-      this.isAuthenticated = true
-      await this.fetchUser()
+            if (response.data.token && response.data.data) {
+            const { token, data: userData } = response.data
+
+            localStorage.setItem('token', token)
+            localStorage.setItem('userData', JSON.stringify(userData))
+
+            this.token = token
+            this.userData = userData
+            this.isAuthenticated = true
+
+            return { success: true, data: response.data }
+            } else {
+            return { success: false, message: 'Token manquant dans la réponse' }
+            }
+        } catch (error) {
+            const message = error.response?.data?.message || 'Identifiants incorrects'
+            const errors = error.response?.data?.errors || {}
+
+            return { success: false, message, errors }
+        }
     },
+
     async fetchUser() {
-      const response = await axios.get('/api/user')
-      this.user = response.data.data
-      this.userData = (response.data.data)
-      this.isAuthenticated = true
+        try {
+            const response = await axios.get(`/api/user`)
+            this.user = response.data.data
+            this.userData = (response.data.data)
+            this.isAuthenticated = true
+        } catch (error) {
+            this.error = error.response?.data?.message || 'Failed to fetch tasks'
+            throw error
+        }
+
     },
+
     logout() {
       localStorage.removeItem('token')
       localStorage.removeItem('userData')
@@ -40,7 +67,8 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.isAuthenticated = false
 
-    }
+    },
+
   }
 })
 
